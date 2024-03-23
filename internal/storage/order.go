@@ -1,0 +1,110 @@
+package storage
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/dnsoftware/gophermart/internal/constants"
+	"github.com/dnsoftware/gophermart/internal/logger"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+	"time"
+)
+
+type OrderRepo struct {
+	storage *MartStorage
+}
+
+type OrderRow struct {
+	ID         int64
+	UserID     int64
+	Num        int64
+	Status     string
+	Accrual    float32
+	UploadedAt time.Time
+}
+
+func NewOrderRepo(storage *MartStorage) *OrderRepo {
+
+	repo := OrderRepo{
+		storage: storage,
+	}
+
+	return &repo
+}
+
+// Загрузка номера заказа
+// возвращает стутус операции и ошибку
+func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int64, int, error) {
+
+	query := `SELECT id, user_id FROM orders WHERE num = $1`
+	row := p.storage.db.QueryRowContext(ctx, query, number)
+
+	var id, user_id int64
+
+	err := row.Scan(&id, &user_id)
+	if err != nil {
+		logger.Log().Error(err.Error())
+	}
+
+	if id > 0 && user_id == userID { // этот пользователь уже добавил этот заказ, возвращаем OK
+		return 0, constants.OrderOk, nil
+	}
+
+	if id > 0 && user_id != userID { // другой пользователь уже добавил этот заказ
+		return 0, constants.OrderAlreadyUpload, fmt.Errorf("другой пользователь уже добавил этот заказ")
+	}
+
+	// записи с заказом еще нет - добавляем
+	query = `INSERT INTO orders (user_id, num, status, accrual, uploaded_at)
+			  VALUES ($1, $2, $3, $4, now()) RETURNING id`
+
+	status := constants.OrderInternalError
+
+	err = p.storage.retryExec(ctx, query, userID, number, constants.OrderNew, 0)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgerrcode.UniqueViolation == pgErr.Code {
+				status = constants.OrderAlreadyUpload
+			}
+		}
+		return 0, status, fmt.Errorf("OrderRepo Create: %w", err)
+	}
+
+	query = `SELECT currval('orders_id_seq')`
+	row = p.storage.db.QueryRowContext(ctx, query)
+
+	var oid int64
+	err = row.Scan(&oid)
+	if err != nil {
+		return 0, status, fmt.Errorf("OrderRepo Create | GetAutoInc: %w", err)
+	}
+
+	return oid, constants.OrderAccepted, nil
+}
+
+func (p *OrderRepo) List(ctx context.Context, userID int64) ([]OrderRow, int, error) {
+	orders := make([]OrderRow, 0)
+
+	query := `SELECT id, user_id, num, status, accrual, uploaded_at 
+			  FROM orders WHERE user_id = $1 
+			  ORDER BY uploaded_at DESC`
+	rows, err := p.storage.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return []OrderRow{}, constants.OrderInternalError, fmt.Errorf("OrderRepo List: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var o OrderRow
+		err = rows.Scan(&o.ID, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
+		if err != nil {
+			return []OrderRow{}, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Next: %w", err)
+		}
+
+		orders = append(orders, o)
+	}
+
+	return orders, constants.OrdersListOk, nil
+}

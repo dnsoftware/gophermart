@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/dnsoftware/gophermart/internal/gophermart/app"
+)
 
 func main() {
-	fmt.Println("")
+	app.Run()
 }
