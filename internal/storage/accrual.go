@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/dnsoftware/gophermart/internal/constants"
 	"io"
 	"net/http"
@@ -53,9 +54,17 @@ func (a *AccrualRepo) GetOrder(orderNum int64) (*AccrualRow, int, error) {
 	}
 
 	row := &AccrualRow{}
-	err = json.Unmarshal(data, row)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
+
+	if resp.StatusCode == http.StatusOK {
+		err = json.Unmarshal(data, row)
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		errMessage := string(data) + ", Retry-After: " + resp.Header.Get("Retry-After")
+		return nil, http.StatusTooManyRequests, fmt.Errorf(errMessage)
 	}
 
 	return row, resp.StatusCode, nil

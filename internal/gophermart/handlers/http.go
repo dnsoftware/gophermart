@@ -19,7 +19,7 @@ type OrderMart interface {
 }
 
 type BalanceMart interface {
-	AddTransaction(ctx context.Context, userID int64, orderNumber int64, amount float32) (int, error)
+	AddTransaction(ctx context.Context, orderNumber int64, amount float32) error
 }
 
 type Server struct {
@@ -58,6 +58,7 @@ func NewServer(runAddr string, userMart UserMart, orderMart OrderMart, balanceMa
 	h.Router.Post(constants.UserLoginAction, h.userLogin)
 	h.Router.With(AuthMiddleware).Post(constants.UserOrderUpload, h.userOrderUpload)
 	h.Router.With(AuthMiddleware).Get(constants.UserOrdersList, h.userOrdersList)
+	//h.Router.With(AuthMiddleware).Get(constants.UserBalance, h.userBalance)
 
 	srv := &http.Server{
 		Addr:    runAddr,

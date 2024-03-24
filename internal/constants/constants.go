@@ -57,10 +57,11 @@ const (
 	UserIDKey           = "userID"
 
 	AccrualServiceQueryLimit = 100                    // максимально кол-во запросов к Accrual сервису в минуту
-	AccrualCheckPeriod       = 60                     // период проверки
+	AccrualCheckPeriod       = 10                     // период проверки
 	AccrualOrderEndpoint     = "/api/orders/{number}" // получение информации о расчёте начислений баллов лояльности
 
-	OrdersChannelCapacity = 10 // емкость канала для обмена данными по ордерам
+	OrdersChannelCapacity = 1 // емкость канала для обмена данными по ордерам
+	CheckOrdersPeriod     = 5 // период проверки необработанных ордеров в секундах
 )
 
 // статусы заказов
@@ -69,4 +70,12 @@ const (
 	OrderProcessing = "PROCESSING"
 	OrderInvalid    = "INVALID"
 	OrderProcessed  = "PROCESSED"
+)
+
+// статусы расчетов
+const (
+	AccrualRegistered = "REGISTERED"
+	AccrualInvalid    = "INVALID"
+	AccrualProcessing = "PROCESSING"
+	AccrualProcessed  = "PROCESSED"
 )

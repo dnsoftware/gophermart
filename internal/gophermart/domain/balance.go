@@ -2,25 +2,32 @@ package domain
 
 import (
 	"context"
+	"fmt"
 )
 
 type BalanceStorage interface {
-	Create(ctx context.Context, userID, number int64) (int64, int, error)
+	SaveTransaction(ctx context.Context, orderNumber int64, amount float32) error
 }
 
 type Balance struct {
 	storage BalanceStorage
 }
 
-func NewBalanceModel(storage BalanceStorage) (*Balance, error) {
+func NewBalanceModel(storage BalanceStorage) *Balance {
 	balance := &Balance{
 		storage: storage,
 	}
 
-	return balance, nil
+	return balance
 }
 
-func (b *Balance) AddTransaction(ctx context.Context, userID int64, orderNumber int64, amount float32) (int, error) {
+// комплексное обновление данных в базе
+func (b *Balance) AddTransaction(ctx context.Context, orderNumber int64, amount float32) error {
 
-	return 0, nil
+	err := b.storage.SaveTransaction(ctx, orderNumber, amount)
+	if err != nil {
+		return fmt.Errorf("Ошибка при сохранении начислений в базу %w", err)
+	}
+
+	return nil
 }

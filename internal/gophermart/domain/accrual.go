@@ -6,11 +6,24 @@ import (
 	"github.com/dnsoftware/gophermart/internal/constants"
 	"github.com/dnsoftware/gophermart/internal/logger"
 	"github.com/dnsoftware/gophermart/internal/storage"
+	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 )
 
 type AccrualStorage interface {
 	GetOrder(orderNum int64) (*storage.AccrualRow, int, error)
+}
+
+// непроверенные ордера берем и отсылаем на проверку
+type Unchecked interface {
+	Pop() int64
+}
+
+// проверенные ордера ставим в очередь на сохранение
+type Checked interface {
+	Push(order int64, status string, accrual float32)
 }
 
 type AccrualItem struct {
@@ -21,17 +34,21 @@ type Accrual struct {
 	accrualServiceQueryLimit int           // максимально кол-во запросов к Accrual сервису в минуту
 	counter                  int           // счетчик запросов за текущий интервал
 	checkPeriod              time.Duration // период проверки
+	ordersToCheck            Unchecked     // отсюда забираем ордера на проверку и шлем в Accrual
+	ordersToSave             Checked       // сюда заносим проверенные ордера, полученные из Accrual
 }
 
-func NewAccrualModel(storage AccrualStorage) (*Accrual, error) {
+func NewAccrualModel(storage AccrualStorage, ordersToCheck Unchecked, ordersToSave Checked) *Accrual {
 	balance := &Accrual{
 		storage:                  storage,
 		accrualServiceQueryLimit: constants.AccrualServiceQueryLimit,
 		counter:                  0,
 		checkPeriod:              time.Duration(constants.AccrualCheckPeriod) * time.Second,
+		ordersToCheck:            ordersToCheck,
+		ordersToSave:             ordersToSave,
 	}
 
-	return balance, nil
+	return balance
 }
 
 // StartAccrualChecker Служба проверки начислений
@@ -47,27 +64,53 @@ func (b *Accrual) StartAccrualChecker(ctx context.Context) {
 			b.counter = 0
 			fmt.Println("tick")
 		default:
-			if b.counter == b.accrualServiceQueryLimit {
-				timer.Reset(b.checkPeriod)
+			if b.counter >= b.accrualServiceQueryLimit {
 				continue
 			}
 
 			// основная работа
-			fmt.Println("accepting request", b.counter)
-			// TODO запрос к каналу ордеров и получение необработанных
-			b.accrualCheck(2224764148437)
+			orderNumber := b.ordersToCheck.Pop()
+			order, status, err := b.storage.GetOrder(orderNumber)
+
+			switch status {
+			case http.StatusOK:
+
+				switch order.Status {
+				case constants.AccrualRegistered, constants.AccrualProcessing: // еще не готовы
+					b.ordersToSave.Push(orderNumber, constants.OrderProcessing, 0)
+				case constants.AccrualProcessed:
+					b.ordersToSave.Push(orderNumber, constants.OrderProcessed, order.Accrual)
+				case constants.AccrualInvalid:
+					b.ordersToSave.Push(orderNumber, constants.OrderInvalid, order.Accrual)
+				}
+
+			case http.StatusNoContent:
+				logger.Log().Info(fmt.Sprintf("Accrual GetOrder no content: %v", orderNumber))
+
+			case http.StatusTooManyRequests:
+				re := regexp.MustCompile(`^No more than (\d+) requests per minute allowed, Retry-After: (\d+)$`)
+				matches := re.FindStringSubmatch(err.Error())
+				if len(matches) < 3 {
+					logger.Log().Error("Error regexp match accrual too many requests")
+					break
+				}
+
+				newQueryLimit, _ := strconv.Atoi(matches[1])
+				b.accrualServiceQueryLimit = newQueryLimit
+
+				newCheckPeriod, _ := strconv.Atoi(matches[2])
+				b.checkPeriod = time.Duration(newCheckPeriod) * time.Second
+				timer.Reset(b.checkPeriod)
+				b.counter = b.accrualServiceQueryLimit // в этом временном отрезке запросов уже не будет
+
+				logger.Log().Info(fmt.Sprintf("too many requests: %v", orderNumber))
+
+			case http.StatusInternalServerError:
+				logger.Log().Error("Accrual GetOrder error: " + err.Error())
+			}
 
 			b.counter++
 		}
 	}
 
-}
-
-func (b *Accrual) accrualCheck(orderNum int64) {
-	order, status, err := b.storage.GetOrder(orderNum)
-	if err != nil {
-
-	}
-
-	fmt.Println(order, status)
 }

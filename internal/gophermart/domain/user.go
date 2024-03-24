@@ -29,12 +29,12 @@ type UserItem struct {
 	Password string `json:"password"`
 }
 
-func NewUserModel(storage UserStorage) (*User, error) {
+func NewUserModel(storage UserStorage) *User {
 	user := &User{
 		storage: storage,
 	}
 
-	return user, nil
+	return user
 }
 
 // возвращает токен нового пользователя, статус завершения операции и ошибку

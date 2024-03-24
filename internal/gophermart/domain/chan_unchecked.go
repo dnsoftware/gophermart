@@ -14,10 +14,12 @@ func NewOrdersUnchecked() *OrdersUnchecked {
 	}
 }
 
+// ставим в очередь для дальнейшей отправки на проверку
 func (u *OrdersUnchecked) Push(number int64) {
 	u.ordersCh <- number
 }
 
+// забираем из очереди для отпарвки на проверку в Accrual
 func (u *OrdersUnchecked) Pop() int64 {
 	return <-u.ordersCh
 }

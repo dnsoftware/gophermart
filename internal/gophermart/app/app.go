@@ -23,6 +23,7 @@ func Run() {
 
 	cfg := config.NewServerConfig()
 
+	// репозитории
 	martStorage, err := storage.NewMartStorage(cfg.DatabaseURI)
 	if err != nil {
 		panic(err)
@@ -33,27 +34,37 @@ func Run() {
 	balanceRepo := storage.NewBalanceRepo(martStorage)
 	accrualRepo := storage.NewAccrualRepo()
 
-	gophermart, err := domain.NewGophermart(cfg, userRepo, orderRepo, balanceRepo, accrualRepo)
-	if err != nil {
-		panic(err)
-	}
+	// канал с ордерами на проверку
+	chanUnchecked := domain.NewOrdersUnchecked()
+	// канал с проверенными ордерами
+	chanChecked := domain.NewOrdersChecked()
+
+	// основные объекты
+	user := domain.NewUserModel(userRepo)
+
+	// берет из chanBalance и сохраняет в базу
+	balance := domain.NewBalanceModel(balanceRepo)
+
+	// готовит ордера на проверку chanUnchecked<-, берет данные проверенных ордеров и сохраняет статус в базу ордеров <-chanChecked
+	// а также в базу балансов
+	order := domain.NewOrderModel(orderRepo, chanUnchecked, chanChecked, balance)
+
+	// отсылает ордера на проверку <-chanUnchecked, ставит в очередь на сохранение chanChecked<-
+	accrual := domain.NewAccrualModel(accrualRepo, chanUnchecked, chanChecked)
 
 	ctxSignal, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
-	// канал с ордерами на проверку
-	chanUnchecked := domain.NewOrdersUnchecked()
-
-	// канал с проверенными ордерами
-	chanChecked := domain.NewOrdersChecked()
+	order.ProcessUnchecked(ctxSignal)
+	order.ProcessChecked(ctxSignal)
 
 	// работа с accrual сервисом - проверка начислений по заказам
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		gophermart.Accrual.StartAccrualChecker(ctxSignal)
+		accrual.StartAccrualChecker(ctxSignal)
 	}()
 
-	srv := handlers.NewServer(cfg.RunAddress, gophermart.User, gophermart.Order, gophermart.Balance)
+	srv := handlers.NewServer(cfg.RunAddress, user, order, balance)
 
 	// запуск HTTP сервера
 	wg.Add(1)
@@ -70,8 +81,6 @@ func Run() {
 	wg.Add(1)
 	go func() {
 		<-ctxSignal.Done()
-
-		fmt.Println("Shutdown signal received")
 
 		ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 

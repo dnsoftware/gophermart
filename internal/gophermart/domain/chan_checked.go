@@ -20,6 +20,7 @@ func NewOrdersChecked() *OrdersChecked {
 	}
 }
 
+// ставим в очередь для дальнейшего сохранения в базу
 func (c *OrdersChecked) Push(order int64, status string, accrual float32) {
 
 	o := orderData{
@@ -31,6 +32,7 @@ func (c *OrdersChecked) Push(order int64, status string, accrual float32) {
 	c.ordersCh <- o
 }
 
+// забираем из очереди для сохранения в базу
 func (c *OrdersChecked) Pop() (int64, string, float32) {
 
 	o := <-c.ordersCh
