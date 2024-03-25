@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/dnsoftware/gophermart/internal/constants"
@@ -35,7 +36,7 @@ func NewOrderRepo(storage *MartStorage) *OrderRepo {
 
 // Загрузка номера заказа
 // возвращает стутус операции и ошибку
-func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int64, int, error) {
+func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int, error) {
 
 	query := `SELECT id, user_id FROM orders WHERE num = $1`
 	row := p.storage.db.QueryRowContext(ctx, query, number)
@@ -43,16 +44,16 @@ func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int
 	var id, uid int64
 
 	err := row.Scan(&id, &uid)
-	if err != nil {
-		logger.Log().Warn(err.Error())
+	if err != nil && err != sql.ErrNoRows {
+		return constants.OrderInternalError, err
 	}
 
 	if id > 0 && uid == userID { // этот пользователь уже добавил этот заказ, возвращаем OK
-		return 0, constants.OrderOk, nil
+		return constants.OrderOk, nil
 	}
 
 	if id > 0 && uid != userID { // другой пользователь уже добавил этот заказ
-		return 0, constants.OrderAlreadyUpload, fmt.Errorf("другой пользователь уже добавил этот заказ")
+		return constants.OrderAlreadyUpload, fmt.Errorf("другой пользователь уже добавил этот заказ")
 	}
 
 	// записи с заказом еще нет - добавляем
@@ -69,7 +70,7 @@ func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int
 				status = constants.OrderAlreadyUpload
 			}
 		}
-		return 0, status, fmt.Errorf("OrderRepo Create: %w", err)
+		return status, fmt.Errorf("OrderRepo Create: %w", err)
 	}
 
 	query = `SELECT currval('orders_id_seq')`
@@ -78,10 +79,12 @@ func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int
 	var oid int64
 	err = row.Scan(&oid)
 	if err != nil {
-		return 0, status, fmt.Errorf("OrderRepo Create | GetAutoInc: %w", err)
+		return status, fmt.Errorf("OrderRepo Create | GetAutoInc: %w", err)
 	}
-
-	return oid, constants.OrderAccepted, nil
+	if oid == 0 {
+		fmt.Print("")
+	}
+	return constants.OrderAccepted, nil
 }
 
 func (p *OrderRepo) List(ctx context.Context, userID int64) ([]OrderRow, int, error) {

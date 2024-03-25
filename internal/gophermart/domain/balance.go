@@ -101,7 +101,7 @@ func (b *Balance) Withraw(ctx context.Context, userID int64, number int64, amoun
 		return constants.WithdrawInternalError, fmt.Errorf("ошибка получения баланса: " + err.Error())
 	}
 	if amount > balance.Current {
-		return constants.WithdrawNotEnoughFunds, fmt.Errorf("ошибка получения баланса")
+		return constants.WithdrawNotEnoughFunds, fmt.Errorf(fmt.Sprintf("ошибка получения баланса, запрошено %v, в наличии %v: ", amount, balance.Current))
 	}
 
 	// обработка списания

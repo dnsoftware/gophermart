@@ -11,7 +11,7 @@ import (
 )
 
 type OrderStorage interface {
-	Create(ctx context.Context, userID, number int64) (int64, int, error)
+	Create(ctx context.Context, userID, number int64) (int, error)
 	List(ctx context.Context, userID int64) ([]storage.OrderRow, int, error)
 	GetUnchecked(ctx context.Context) ([]storage.OrderRow, error)
 	UpdateStatus(ctx context.Context, orderNumber int64, orderStatus string) error
@@ -67,12 +67,12 @@ func (o *Order) AddOrder(ctx context.Context, userID, number int64) (int, error)
 	}
 
 	// сохраняем в базу
-	id, status, err := o.storage.Create(ctx, userID, number)
+	status, err := o.storage.Create(ctx, userID, number)
 	if err != nil {
 		return status, err
 	}
 
-	logger.Log().Info(fmt.Sprintf("Добавлен заказ %v", id))
+	logger.Log().Info(fmt.Sprintf("Добавлен заказ %v", number))
 
 	return status, nil
 }
