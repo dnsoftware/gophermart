@@ -50,8 +50,8 @@ const (
 const (
 	ApplicationJSON string = "application/json"
 
-	TOKEN_EXP  = time.Hour * 24
-	SECRET_KEY = "golangforever"
+	TokenExp  = time.Hour * 24
+	SecretKey = "golangforever"
 
 	MinLoginLength    = 3
 	MinPasswordLength = 8

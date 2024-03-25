@@ -46,7 +46,7 @@ func (b *Balance) AddTransaction(ctx context.Context, orderNumber int64, amount 
 
 	err := b.storage.SaveTransaction(ctx, orderNumber, amount)
 	if err != nil {
-		return fmt.Errorf("Ошибка при сохранении начислений в базу %w", err)
+		return fmt.Errorf("ошибка при сохранении начислений в базу %w", err)
 	}
 
 	return nil

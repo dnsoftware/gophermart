@@ -16,20 +16,20 @@ type Claims struct {
 
 // BuildJWTString создаёт токен и возвращает его в виде строки.
 // передаем ID пользователя
-func BuildJWTString(userId int64) (string, error) {
+func BuildJWTString(userID int64) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// когда создан токен
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(constants.TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(constants.TokenExp)),
 		},
 
 		// собственное утверждение
-		UserID: userId,
+		UserID: userID,
 	})
 
 	// создаём строку токена
-	tokenString, err := token.SignedString([]byte(constants.SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(constants.SecretKey))
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +43,7 @@ func GetUserID(tokenString string) int64 {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
-			return []byte(constants.SECRET_KEY), nil
+			return []byte(constants.SecretKey), nil
 		})
 	if err != nil {
 		return -1

@@ -14,7 +14,7 @@ import (
 
 type UserStorage interface {
 	Create(ctx context.Context, login string, password string) (int64, int, error)
-	FindById(ctx context.Context, id int64) (storage.UserRow, error)
+	FindByID(ctx context.Context, id int64) (storage.UserRow, error)
 	FindByLoginPassword(ctx context.Context, login string, password string) (int64, int, error)
 }
 

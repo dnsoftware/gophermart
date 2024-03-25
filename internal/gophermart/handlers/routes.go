@@ -160,6 +160,10 @@ func (h *Server) userOrdersList(res http.ResponseWriter, req *http.Request) {
 	}
 
 	body, err := json.Marshal(list)
+	if err != nil {
+		http.Error(res, "", http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", constants.ApplicationJSON)
 	code, _ := constants.StatusData(status)
@@ -181,6 +185,10 @@ func (h *Server) userBalance(res http.ResponseWriter, req *http.Request) {
 	}
 
 	body, err := json.Marshal(currentBalance)
+	if err != nil {
+		http.Error(res, "", http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", constants.ApplicationJSON)
 	res.WriteHeader(http.StatusOK)
@@ -201,6 +209,10 @@ func (h *Server) userWithdrawals(res http.ResponseWriter, req *http.Request) {
 	}
 
 	body, err := json.Marshal(withdrawalsList)
+	if err != nil {
+		http.Error(res, "", http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", constants.ApplicationJSON)
 

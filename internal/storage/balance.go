@@ -60,7 +60,7 @@ func (b *BalanceRepo) SaveTransaction(ctx context.Context, orderNumber int64, am
 		return err
 	}
 	if err == nil { // если ошибок нет - то такая запись уже есть
-		return fmt.Errorf("Данные по начислению уже сохранены")
+		return fmt.Errorf("данные по начислению уже сохранены")
 	}
 
 	// стартуем транзакцию БД
@@ -144,6 +144,10 @@ func (b *BalanceRepo) GetUserWithdrawList(ctx context.Context, userID int64) ([]
 		}
 
 		wd = append(wd, w)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("GetUserWithdrawList rows.Err: %w", err)
 	}
 
 	return wd, nil

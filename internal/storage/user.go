@@ -62,7 +62,7 @@ func (p *UserRepo) Create(ctx context.Context, login string, password string) (i
 	return id, constants.RegisterOk, nil
 }
 
-func (p *UserRepo) FindById(ctx context.Context, id int64) (UserRow, error) {
+func (p *UserRepo) FindByID(ctx context.Context, id int64) (UserRow, error) {
 
 	item := UserRow{}
 

@@ -16,7 +16,7 @@ type OrderRepo struct {
 }
 
 type OrderRow struct {
-	ID         int64
+	Id         int64
 	UserID     int64
 	Num        int64
 	Status     string
@@ -40,18 +40,18 @@ func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int
 	query := `SELECT id, user_id FROM orders WHERE num = $1`
 	row := p.storage.db.QueryRowContext(ctx, query, number)
 
-	var id, user_id int64
+	var id, uid int64
 
-	err := row.Scan(&id, &user_id)
+	err := row.Scan(&id, &uid)
 	if err != nil {
 		logger.Log().Warn(err.Error())
 	}
 
-	if id > 0 && user_id == userID { // этот пользователь уже добавил этот заказ, возвращаем OK
+	if id > 0 && uid == userID { // этот пользователь уже добавил этот заказ, возвращаем OK
 		return 0, constants.OrderOk, nil
 	}
 
-	if id > 0 && user_id != userID { // другой пользователь уже добавил этот заказ
+	if id > 0 && uid != userID { // другой пользователь уже добавил этот заказ
 		return 0, constants.OrderAlreadyUpload, fmt.Errorf("другой пользователь уже добавил этот заказ")
 	}
 
@@ -92,18 +92,22 @@ func (p *OrderRepo) List(ctx context.Context, userID int64) ([]OrderRow, int, er
 			  ORDER BY uploaded_at DESC`
 	rows, err := p.storage.db.QueryContext(ctx, query, userID)
 	if err != nil {
-		return []OrderRow{}, constants.OrderInternalError, fmt.Errorf("OrderRepo List: %w", err)
+		return nil, constants.OrderInternalError, fmt.Errorf("OrderRepo List: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var o OrderRow
-		err = rows.Scan(&o.ID, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
+		err = rows.Scan(&o.Id, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
 		if err != nil {
-			return []OrderRow{}, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Next: %w", err)
+			return nil, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Next: %w", err)
 		}
 
 		orders = append(orders, o)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Err: %w", err)
 	}
 
 	return orders, constants.OrdersListOk, nil
@@ -116,18 +120,22 @@ func (p *OrderRepo) GetUnchecked(ctx context.Context) ([]OrderRow, error) {
 			  FROM orders WHERE status = $1 OR status = $2`
 	rows, err := p.storage.db.QueryContext(ctx, query, constants.OrderNew, constants.OrderProcessing)
 	if err != nil {
-		return []OrderRow{}, fmt.Errorf("GetUnchecked error: %w", err)
+		return nil, fmt.Errorf("GetUnchecked error: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var o OrderRow
-		err = rows.Scan(&o.ID, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
+		err = rows.Scan(&o.Id, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
 		if err != nil {
-			return []OrderRow{}, fmt.Errorf("GetUnchecked rows.Next: %w", err)
+			return nil, fmt.Errorf("GetUnchecked rows.Next: %w", err)
 		}
 
 		orders = append(orders, o)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("GetUnchecked rows.Err: %w", err)
 	}
 
 	return orders, nil
@@ -140,7 +148,7 @@ func (p *OrderRepo) GetOrderByNumber(ctx context.Context, orderNumber int64) (Or
 			  FROM orders WHERE num = $1`
 	row := p.storage.db.QueryRowContext(ctx, query, orderNumber)
 
-	err := row.Scan(&order.ID, &order.UserID, &order.Num, &order.Status, &order.Accrual, &order.UploadedAt)
+	err := row.Scan(&order.Id, &order.UserID, &order.Num, &order.Status, &order.Accrual, &order.UploadedAt)
 	if err != nil {
 		return OrderRow{}, fmt.Errorf("GetOrder Scan: %w", err)
 	}
@@ -155,8 +163,8 @@ func (p *OrderRepo) UpdateStatus(ctx context.Context, orderNumber int64, orderSt
 
 	err := p.storage.retryExec(ctx, query, orderNumber, orderStatus)
 	if err != nil {
-		logger.Log().Error(fmt.Sprintf("Order %v is not update", orderNumber))
-		return fmt.Errorf("Order is not update")
+		logger.Log().Error(fmt.Sprintf("order %v is not update", orderNumber))
+		return fmt.Errorf("order is not update")
 	}
 
 	return nil
