@@ -24,7 +24,7 @@ type User struct {
 
 // UserItem plain structure
 type UserItem struct {
-	Id       int64
+	ID       int64
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }

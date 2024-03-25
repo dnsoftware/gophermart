@@ -16,7 +16,7 @@ type OrderRepo struct {
 }
 
 type OrderRow struct {
-	Id         int64
+	ID         int64
 	UserID     int64
 	Num        int64
 	Status     string
@@ -98,7 +98,7 @@ func (p *OrderRepo) List(ctx context.Context, userID int64) ([]OrderRow, int, er
 
 	for rows.Next() {
 		var o OrderRow
-		err = rows.Scan(&o.Id, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
+		err = rows.Scan(&o.ID, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
 		if err != nil {
 			return nil, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Next: %w", err)
 		}
@@ -126,7 +126,7 @@ func (p *OrderRepo) GetUnchecked(ctx context.Context) ([]OrderRow, error) {
 
 	for rows.Next() {
 		var o OrderRow
-		err = rows.Scan(&o.Id, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
+		err = rows.Scan(&o.ID, &o.UserID, &o.Num, &o.Status, &o.Accrual, &o.UploadedAt)
 		if err != nil {
 			return nil, fmt.Errorf("GetUnchecked rows.Next: %w", err)
 		}
@@ -148,7 +148,7 @@ func (p *OrderRepo) GetOrderByNumber(ctx context.Context, orderNumber int64) (Or
 			  FROM orders WHERE num = $1`
 	row := p.storage.db.QueryRowContext(ctx, query, orderNumber)
 
-	err := row.Scan(&order.Id, &order.UserID, &order.Num, &order.Status, &order.Accrual, &order.UploadedAt)
+	err := row.Scan(&order.ID, &order.UserID, &order.Num, &order.Status, &order.Accrual, &order.UploadedAt)
 	if err != nil {
 		return OrderRow{}, fmt.Errorf("GetOrder Scan: %w", err)
 	}

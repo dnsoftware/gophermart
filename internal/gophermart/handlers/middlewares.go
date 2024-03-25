@@ -17,6 +17,7 @@ import (
 )
 
 type Middleware func(http.Handler) http.Handler
+type UserKey string
 
 func CheckSignMiddleware(cryptoKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -155,7 +156,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), constants.UserIDKey, uid)
+		var userKey UserKey = constants.UserIDKey
+		ctx := context.WithValue(r.Context(), userKey, uid)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -15,7 +15,7 @@ type UserRepo struct {
 }
 
 type UserRow struct {
-	Id       int64
+	ID       int64
 	Login    string
 	Password string
 }
