@@ -156,7 +156,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		//var userKey UserKey = constants.UserIDKey
 		ctx := context.WithValue(r.Context(), constants.UserIDKey, uid)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

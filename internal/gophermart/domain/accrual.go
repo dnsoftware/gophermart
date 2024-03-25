@@ -53,14 +53,15 @@ func NewAccrualModel(storage AccrualStorage, ordersToCheck Unchecked, ordersToSa
 
 // StartAccrualChecker Служба проверки начислений
 func (b *Accrual) StartAccrualChecker(ctx context.Context) {
-	timer := time.NewTimer(1 * time.Minute)
+	//timer := time.NewTimer(5 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 
 	for {
 		select {
 		case <-ctx.Done():
 			logger.Log().Info("AccrualChecker DONE!!!")
 			return
-		case <-timer.C:
+		case <-ticker.C:
 			b.counter = 0
 			fmt.Println("tick")
 		default:
@@ -100,7 +101,7 @@ func (b *Accrual) StartAccrualChecker(ctx context.Context) {
 
 				newCheckPeriod, _ := strconv.Atoi(matches[2])
 				b.checkPeriod = time.Duration(newCheckPeriod) * time.Second
-				timer.Reset(b.checkPeriod)
+				ticker.Reset(b.checkPeriod)
 				b.counter = b.accrualServiceQueryLimit // в этом временном отрезке запросов уже не будет
 
 				logger.Log().Info(fmt.Sprintf("too many requests: %v", orderNumber))

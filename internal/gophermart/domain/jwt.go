@@ -54,6 +54,6 @@ func GetUserID(tokenString string) int64 {
 		return -1
 	}
 
-	fmt.Println("Token is valid")
+	fmt.Println(fmt.Sprintf("Token is valid, userID: %v", claims.UserID))
 	return claims.UserID
 }

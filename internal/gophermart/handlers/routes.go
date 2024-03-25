@@ -167,8 +167,9 @@ func (h *Server) userOrdersList(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("Content-Type", constants.ApplicationJSON)
 	code, _ := constants.StatusData(status)
+	fmt.Println(" -===================++++++ ", string(body), code)
 	res.WriteHeader(code)
-	res.Write([]byte(body))
+	res.Write(body)
 }
 
 func (h *Server) userBalance(res http.ResponseWriter, req *http.Request) {

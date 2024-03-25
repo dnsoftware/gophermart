@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dnsoftware/gophermart/internal/constants"
@@ -112,7 +113,8 @@ func (p *OrderRepo) List(ctx context.Context, userID int64) ([]OrderRow, int, er
 	if err = rows.Err(); err != nil {
 		return nil, constants.OrderInternalError, fmt.Errorf("OrderRepo rows.Err: %w", err)
 	}
-
+	dt, _ := json.Marshal(orders)
+	fmt.Println(string(dt))
 	return orders, constants.OrdersListOk, nil
 }
 
