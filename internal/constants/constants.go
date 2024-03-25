@@ -14,7 +14,7 @@ const (
 
 // интервалы
 const (
-	DBContextTimeout   time.Duration = time.Duration(5) * time.Second  // длительность запроса в контексте работы с БД
+	DBContextTimeout   time.Duration = time.Duration(50) * time.Second // длительность запроса в контексте работы с БД
 	HTTPContextTimeout time.Duration = time.Duration(10) * time.Second // длительность запроса в контексте работы с сетью
 	HTTPAttemtPeriods  string        = "1s,2s,5s"
 )
@@ -35,12 +35,15 @@ const (
 	PasswordSalt string = "gT65HtksdhHHj"
 )
 
-// actions
+// routes
 const (
-	UserRegisterAction string = "/api/user/register"
-	UserLoginAction    string = "/api/user/login"
-	UserOrderUpload    string = "/api/user/orders"
-	UserOrdersList     string = "/api/user/orders"
+	UserRegisterRoute    string = "/api/user/register"
+	UserLoginRoute       string = "/api/user/login"
+	UserOrderUploadRoute string = "/api/user/orders"
+	UserOrdersListRoute  string = "/api/user/orders"
+	UserBalanceRoute     string = "/api/user/balance"
+	UserWithdrawalsRoute string = "/api/user/withdrawals"
+	UserWithdrawRoute    string = "/api/user/balance/withdraw"
 )
 
 // разное

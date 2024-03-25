@@ -20,6 +20,9 @@ type OrderMart interface {
 
 type BalanceMart interface {
 	AddTransaction(ctx context.Context, orderNumber int64, amount float32) error
+	UserBalance(ctx context.Context, userID int64) (*domain.CurrentBalance, error)
+	UserWithrawalsList(ctx context.Context, userID int64) ([]domain.WithdrawItem, error)
+	Withraw(ctx context.Context, userID int64, number int64, amount float32) (int, error)
 }
 
 type Server struct {
@@ -54,11 +57,13 @@ func NewServer(runAddr string, userMart UserMart, orderMart OrderMart, balanceMa
 	h.Router.Use(GzipMiddleware)
 	h.Router.Use(WithLogging)
 
-	h.Router.Post(constants.UserRegisterAction, h.userRegister)
-	h.Router.Post(constants.UserLoginAction, h.userLogin)
-	h.Router.With(AuthMiddleware).Post(constants.UserOrderUpload, h.userOrderUpload)
-	h.Router.With(AuthMiddleware).Get(constants.UserOrdersList, h.userOrdersList)
-	//h.Router.With(AuthMiddleware).Get(constants.UserBalance, h.userBalance)
+	h.Router.Post(constants.UserRegisterRoute, h.userRegister)
+	h.Router.Post(constants.UserLoginRoute, h.userLogin)
+	h.Router.With(AuthMiddleware).Post(constants.UserOrderUploadRoute, h.userOrderUpload)
+	h.Router.With(AuthMiddleware).Get(constants.UserOrdersListRoute, h.userOrdersList)
+	h.Router.With(AuthMiddleware).Get(constants.UserBalanceRoute, h.userBalance)
+	h.Router.With(AuthMiddleware).Get(constants.UserWithdrawalsRoute, h.userWithdrawals)
+	h.Router.With(AuthMiddleware).Post(constants.UserWithdrawRoute, h.userWithdraw)
 
 	srv := &http.Server{
 		Addr:    runAddr,
