@@ -24,7 +24,7 @@ type UncheckedOrders interface {
 }
 
 type CheckedOrders interface {
-	Pop() (int64, string, float32)
+	Pop(ctx context.Context) (int64, string, float32)
 }
 
 type BalanceAdd interface {
@@ -144,7 +144,7 @@ func (o *Order) ProcessChecked(ctx context.Context) {
 				logger.Log().Info("ProcessChecked DONE!!!")
 				return
 			default:
-				orderID, orderStatus, orderAccrual := o.ordersToSave.Pop()
+				orderID, orderStatus, orderAccrual := o.ordersToSave.Pop(ctx)
 
 				switch orderStatus {
 				case constants.OrderInvalid, constants.OrderProcessing: // просто меняем статуc
@@ -160,6 +160,7 @@ func (o *Order) ProcessChecked(ctx context.Context) {
 						logger.Log().Error(err.Error())
 					}
 				}
+
 			}
 		}
 	}()

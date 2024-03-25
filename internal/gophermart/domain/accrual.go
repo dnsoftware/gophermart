@@ -18,7 +18,7 @@ type AccrualStorage interface {
 
 // непроверенные ордера берем и отсылаем на проверку
 type Unchecked interface {
-	Pop() int64
+	Pop(ctx context.Context) int64
 }
 
 // проверенные ордера ставим в очередь на сохранение
@@ -69,7 +69,7 @@ func (b *Accrual) StartAccrualChecker(ctx context.Context) {
 			}
 
 			// основная работа
-			orderNumber := b.ordersToCheck.Pop()
+			orderNumber := b.ordersToCheck.Pop(ctx)
 			order, status, err := b.storage.GetOrder(orderNumber)
 
 			switch status {

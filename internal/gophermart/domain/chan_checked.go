@@ -1,6 +1,9 @@
 package domain
 
-import "github.com/dnsoftware/gophermart/internal/constants"
+import (
+	"context"
+	"github.com/dnsoftware/gophermart/internal/constants"
+)
 
 /* Очередь проверенных ордеров на занесение в базу */
 
@@ -33,9 +36,13 @@ func (c *OrdersChecked) Push(order int64, status string, accrual float32) {
 }
 
 // забираем из очереди для сохранения в базу
-func (c *OrdersChecked) Pop() (int64, string, float32) {
+func (c *OrdersChecked) Pop(ctx context.Context) (int64, string, float32) {
 
-	o := <-c.ordersCh
+	select {
+	case <-ctx.Done():
+	case o := <-c.ordersCh:
+		return o.order, o.status, o.accrual
+	}
 
-	return o.order, o.status, o.accrual
+	return 0, "", 0
 }

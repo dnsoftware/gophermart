@@ -1,6 +1,9 @@
 package domain
 
-import "github.com/dnsoftware/gophermart/internal/constants"
+import (
+	"context"
+	"github.com/dnsoftware/gophermart/internal/constants"
+)
 
 /* Очередь ордеров на проверку */
 
@@ -20,6 +23,12 @@ func (u *OrdersUnchecked) Push(number int64) {
 }
 
 // забираем из очереди для отпарвки на проверку в Accrual
-func (u *OrdersUnchecked) Pop() int64 {
-	return <-u.ordersCh
+func (u *OrdersUnchecked) Pop(ctx context.Context) int64 {
+	select {
+	case <-ctx.Done():
+	case o := <-u.ordersCh:
+		return o
+	}
+
+	return 0
 }
