@@ -57,7 +57,6 @@ const (
 	MinPasswordLength = 8
 
 	HeaderAuthorization = "Authorization"
-	UserIDKey           = "userID"
 
 	AccrualServiceQueryLimit = 100                    // максимально кол-во запросов к Accrual сервису в минуту
 	AccrualCheckPeriod       = 1                      // период проверки
@@ -81,4 +80,10 @@ const (
 	AccrualInvalid    = "INVALID"
 	AccrualProcessing = "PROCESSING"
 	AccrualProcessed  = "PROCESSED"
+)
+
+type key int
+
+const (
+	UserIDKey key = iota
 )
