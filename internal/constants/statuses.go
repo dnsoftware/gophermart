@@ -129,9 +129,9 @@ func StatusData(code int) (int, string) {
 		return 500, "внутренняя ошибка сервера"
 
 	case Unknown:
-		return 0, ""
+		return 1000, "unknown 1000"
 
 	default:
-		return 0, ""
+		return 2000, "unknown 2000"
 	}
 }
