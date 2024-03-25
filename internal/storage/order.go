@@ -44,7 +44,7 @@ func (p *OrderRepo) Create(ctx context.Context, userID int64, number int64) (int
 
 	err := row.Scan(&id, &user_id)
 	if err != nil {
-		logger.Log().Error(err.Error())
+		logger.Log().Warn(err.Error())
 	}
 
 	if id > 0 && user_id == userID { // этот пользователь уже добавил этот заказ, возвращаем OK

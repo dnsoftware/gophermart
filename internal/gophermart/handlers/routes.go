@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/dnsoftware/gophermart/internal/constants"
 	"github.com/dnsoftware/gophermart/internal/gophermart/domain"
 	"github.com/dnsoftware/gophermart/internal/logger"
@@ -153,6 +154,7 @@ func (h *Server) userOrdersList(res http.ResponseWriter, req *http.Request) {
 	list, status, err := h.orderMart.OrdersList(ctx, userID)
 	if err != nil {
 		code, message := constants.StatusData(status)
+		fmt.Println("----------------============", res, message, code, err, status)
 		http.Error(res, message, code)
 		return
 	}
