@@ -26,7 +26,7 @@ type AccrualRow struct {
 func NewAccrualRepo(address string) *AccrualRepo {
 	return &AccrualRepo{
 		client:                &http.Client{},
-		orderEndpointTemplate: constants.AccrualProtocol + "://" + address + constants.AccrualOrderEndpoint,
+		orderEndpointTemplate: address + constants.AccrualOrderEndpoint,
 	}
 }
 
