@@ -54,7 +54,7 @@ func NewAccrualModel(storage AccrualStorage, ordersToCheck Unchecked, ordersToSa
 // StartAccrualChecker Служба проверки начислений
 func (b *Accrual) StartAccrualChecker(ctx context.Context) {
 	//timer := time.NewTimer(5 * time.Second)
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 
 	for {
 		select {
