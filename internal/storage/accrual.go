@@ -23,10 +23,10 @@ type AccrualRow struct {
 	Accrual float32 `json:"accrual"`
 }
 
-func NewAccrualRepo() *AccrualRepo {
+func NewAccrualRepo(address string) *AccrualRepo {
 	return &AccrualRepo{
 		client:                &http.Client{},
-		orderEndpointTemplate: constants.AccrualProtocol + "://" + constants.AccrualAddress + constants.AccrualOrderEndpoint,
+		orderEndpointTemplate: constants.AccrualProtocol + "://" + address + constants.AccrualOrderEndpoint,
 	}
 }
 

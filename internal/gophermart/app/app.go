@@ -32,7 +32,7 @@ func Run() {
 	userRepo := storage.NewUserRepo(martStorage)
 	orderRepo := storage.NewOrderRepo(martStorage)
 	balanceRepo := storage.NewBalanceRepo(martStorage)
-	accrualRepo := storage.NewAccrualRepo()
+	accrualRepo := storage.NewAccrualRepo(cfg.AccrualAddress)
 
 	// канал с ордерами на проверку
 	chanUnchecked := domain.NewOrdersUnchecked()

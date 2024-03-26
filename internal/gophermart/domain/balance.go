@@ -90,6 +90,11 @@ func (b *Balance) UserWithrawalsList(ctx context.Context, userID int64) ([]Withd
 }
 
 func (b *Balance) Withraw(ctx context.Context, userID int64, number int64, amount float32) (int, error) {
+	// проверка на отрицательное списание
+	if amount <= 0 {
+		return constants.WithdrawNotEnoughFunds, fmt.Errorf("симма списания не может быть нулевой или отрицательной")
+	}
+
 	// проверка на корректность номера заказа
 	if !IsLuhnValid(number) {
 		return constants.WithdrawBadOrderNumber, fmt.Errorf("неверный номер заказа")
