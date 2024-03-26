@@ -7,9 +7,8 @@ import (
 
 // параметры работы сервера по умолчанию
 const (
-	RunAddress      string = "localhost:8081" // адрес:порт сервера по умолчанию
-	AccrualAddress  string = "localhost:8080" // адрес:порт сервера по умолчанию
-	AccrualProtocol string = "http"
+	RunAddress     string = "localhost:8081" // адрес:порт сервера по умолчанию
+	AccrualAddress string = "localhost:8080" // адрес:порт сервера по умолчанию
 )
 
 // интервалы
@@ -59,11 +58,11 @@ const (
 	HeaderAuthorization = "Authorization"
 
 	AccrualServiceQueryLimit = 100                    // максимально кол-во запросов к Accrual сервису в минуту
-	AccrualCheckPeriod       = 1                      // период проверки
+	AccrualCheckPeriod       = 5                      // период проверки
 	AccrualOrderEndpoint     = "/api/orders/{number}" // получение информации о расчёте начислений баллов лояльности
 
+	AccrualTickerPeriod   = 3  // период тикера в секундах
 	OrdersChannelCapacity = 10 // емкость канала для обмена данными по ордерам
-	CheckOrdersPeriod     = 1  // период проверки необработанных ордеров в секундах
 )
 
 // статусы заказов

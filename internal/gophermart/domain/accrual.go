@@ -53,8 +53,7 @@ func NewAccrualModel(storage AccrualStorage, ordersToCheck Unchecked, ordersToSa
 
 // StartAccrualChecker Служба проверки начислений
 func (b *Accrual) StartAccrualChecker(ctx context.Context) {
-	//timer := time.NewTimer(5 * time.Second)
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(time.Duration(constants.AccrualTickerPeriod) * time.Second)
 
 	for {
 		select {
@@ -63,7 +62,6 @@ func (b *Accrual) StartAccrualChecker(ctx context.Context) {
 			return
 		case <-ticker.C:
 			b.counter = 0
-			fmt.Println("tick")
 		default:
 			if b.counter >= b.accrualServiceQueryLimit {
 				continue

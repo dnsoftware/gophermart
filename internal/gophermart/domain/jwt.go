@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"github.com/dnsoftware/gophermart/internal/constants"
 	"github.com/golang-jwt/jwt/v4"
 	"time"
@@ -50,7 +49,6 @@ func GetUserID(tokenString string) int64 {
 	}
 
 	if !token.Valid {
-		fmt.Println("Token is not valid")
 		return -1
 	}
 

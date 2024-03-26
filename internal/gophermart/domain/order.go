@@ -128,8 +128,6 @@ func (o *Order) ProcessUnchecked(ctx context.Context) {
 				for _, order := range orders {
 					o.ordersToCheck.Push(order.Num)
 				}
-
-				time.Sleep(time.Duration(constants.CheckOrdersPeriod) * time.Second)
 			}
 		}
 	}()
